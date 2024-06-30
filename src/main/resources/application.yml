@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: digital_system
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_HOST}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    show-sql: false
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    generate-ddl: false
+  cloud:
+    openfeign:
+      client:
+        config:
+          telegram-report:
+            url: https://api.telegram.org/bot${telegram.token}
+          url-shorter:
+            url: https://clck.ru/
+      http2client:
+        enabled: true
+yandex:
+  form:
+    url: ${YANDEX_FORM_URL}
+telegram:
+  token: ${TELEGRAM_TOKEN}
+  admin-id: ${TELEGRAM_ADMIN_ID}
+resilience4j.rateLimiter:
+  configs:
+    default:
+      timeoutDuration: 1s
+      limitForPeriod: 1
+      limit-refresh-period: 1s
