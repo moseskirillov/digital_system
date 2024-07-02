@@ -13,7 +13,7 @@ import lombok.Setter;
 @Table(name = "groups", schema = "homegroup_bot")
 public class Group {
     @Id
-    private Long id;
+    private Integer id;
     private String metro;
     private String day;
     private String age;

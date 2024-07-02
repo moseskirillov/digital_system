@@ -16,6 +16,8 @@ public interface LeaderRepository extends JpaRepository<Leader, Long> {
             and g.age != 'Молодежные (до 25)'
             and g.age != 'Молодежные (после 25)'
             and g.age != 'Подростки'
+            and l.regionLeaderId is not null
+            and l.regionLeaderId != :regionLeaderId
             """)
-    List<Leader> findGroupLeadersByDay(String day);
+    List<Leader> findGroupLeadersByDay(String day, Integer regionLeaderId);
 }

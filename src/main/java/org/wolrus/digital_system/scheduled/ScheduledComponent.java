@@ -26,6 +26,9 @@ public class ScheduledComponent {
     @Value("${yandex.form.url}")
     private String YANDEX_FORM_URL;
 
+    @Value("${data.region-leader.id}")
+    private Integer REGION_LEADER_ID;
+
     private static final Locale LOCALE = Locale.of("ru", "RU");
     private static final Calendar CALENDAR = new GregorianCalendar(LOCALE);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -40,7 +43,7 @@ public class ScheduledComponent {
     private final NotificationService notificationService;
     private final UnfilledReportRepository unfilledReportRepository;
 
-    @Scheduled(cron = "0 0 21 * * ?")
+    @Scheduled(cron = "0 0 21 * * *", zone = "Europe/Moscow")
     public void notifyLeadersScheduler() {
         log.info("Запущена ежедневная рассылка напоминаний о заполнении отчетов");
         notifyUnfilledReportsLeaders();
@@ -53,7 +56,7 @@ public class ScheduledComponent {
         var currentWeekDay = CALENDAR.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, LOCALE);
         var formattedDay = currentWeekDay.substring(0, 1).toUpperCase() + currentWeekDay.substring(1);
         log.info(String.format("Определен день недели: %s", formattedDay));
-        var leaders = leaderRepository.findGroupLeadersByDay(formattedDay)
+        var leaders = leaderRepository.findGroupLeadersByDay(formattedDay, REGION_LEADER_ID)
                 .stream()
                 .map(e -> new LeaderInfo(e.getName(), String.valueOf(e.getTelegramId())))
                 .toList();
@@ -64,13 +67,13 @@ public class ScheduledComponent {
             var now = DATE_FORMATTER.format(LocalDate.now());
             var shortUrl = getShortUrl(leaderName, now);
             var message = String.format(REPORT_MESSAGE, shortUrl);
+            notificationService.sendNotification(telegramId, message);
             var unfilledReport = UnfilledReport.builder()
                     .reportDate(LocalDate.now())
                     .leaderName(leaderName)
                     .leaderTelegramId(telegramId)
                     .build();
             unfilledReportRepository.saveAndFlush(unfilledReport);
-            notificationService.sendNotification(telegramId, message);
         });
         log.info("Запуск рассылки напоминаний о заполнении отчетов завершен");
     }

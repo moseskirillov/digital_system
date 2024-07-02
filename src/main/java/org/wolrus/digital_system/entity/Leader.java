@@ -17,7 +17,7 @@ import java.util.List;
 @Table(name = "group_leaders", schema = "homegroup_bot")
 public class Leader {
     @Id
-    private Long id;
+    private Integer id;
     private String name;
 
     @Column(name  = "telegram_id")
@@ -25,6 +25,9 @@ public class Leader {
 
     @Column(name  = "telegram_login")
     private String telegramLogin;
+
+    @Column(name = "region_leader_id")
+    private Integer regionLeaderId;
 
     @OneToMany
     @JoinColumn(name = "leader_id")

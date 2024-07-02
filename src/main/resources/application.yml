@@ -10,7 +10,7 @@ spring:
     show-sql: false
     open-in-view: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
     generate-ddl: false
   cloud:
     openfeign:
@@ -25,6 +25,9 @@ spring:
 yandex:
   form:
     url: ${YANDEX_FORM_URL}
+data:
+  region-leader:
+    id: ${REGION_LEADER_ID}
 telegram:
   token: ${TELEGRAM_TOKEN}
   admin-id: ${TELEGRAM_ADMIN_ID}
