@@ -27,7 +27,7 @@ import java.time.LocalDate;
 public class Report {
 
     @Transient
-    private static final String YES = "YES";
+    private static final String YES = "Да";
 
     @Id
     @SequenceGenerator(name = "reports_seq", allocationSize = 1, schema = "homegroup_bot")
