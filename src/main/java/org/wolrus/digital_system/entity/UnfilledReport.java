@@ -26,7 +26,7 @@ public class UnfilledReport {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "unfilled_reports_seq")
-    @SequenceGenerator(name = "unfilled_reports_seq", allocationSize = 1)
+    @SequenceGenerator(name = "unfilled_reports_seq", allocationSize = 1, schema = "homegroup_bot")
     private Long id;
 
     @Column(name = "leader_name")

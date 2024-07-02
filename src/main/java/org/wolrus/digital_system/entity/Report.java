@@ -30,7 +30,7 @@ public class Report {
     private static final String YES = "YES";
 
     @Id
-    @SequenceGenerator(name = "reports_seq", allocationSize = 1)
+    @SequenceGenerator(name = "reports_seq", allocationSize = 1, schema = "homegroup_bot")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "reports_seq")
     private Long id;
 
