@@ -30,7 +30,6 @@ public class ScheduledComponent {
     private Integer REGION_LEADER_ID;
 
     private static final Locale LOCALE = Locale.of("ru", "RU");
-    private static final Calendar CALENDAR = new GregorianCalendar(LOCALE);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     private static final String REPORT_MESSAGE = "Добрый вечер, сегодня у вас проходит домашняя группа. " +
@@ -53,7 +52,7 @@ public class ScheduledComponent {
 
     private void notifyReportsLeaders() {
         log.info("Запуск рассылки напоминаний о заполнении отчетов");
-        var currentWeekDay = CALENDAR.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, LOCALE);
+        var currentWeekDay = new GregorianCalendar(LOCALE).getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, LOCALE);
         var formattedDay = currentWeekDay.substring(0, 1).toUpperCase() + currentWeekDay.substring(1);
         log.info(String.format("Определен день недели: %s", formattedDay));
         var leaders = leaderRepository.findGroupLeadersByDay(formattedDay, REGION_LEADER_ID)
