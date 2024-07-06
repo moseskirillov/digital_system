@@ -13,6 +13,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.util.StringUtils;
 import org.wolrus.digital_system.model.ReportRequest;
 
 import java.time.LocalDate;
@@ -28,6 +29,9 @@ public class Report {
 
     @Transient
     private static final String YES = "Да";
+
+    @Transient
+    private static final String EPMTY_STRING = "";
 
     @Id
     @SequenceGenerator(name = "reports_seq", allocationSize = 1, schema = "homegroup_bot")
@@ -54,8 +58,8 @@ public class Report {
                 .date(LocalDate.now())
                 .leaderName(report.name())
                 .groupIsDone(YES.equals(report.groupIsDone()))
-                .peopleCount(report.peopleCount())
-                .evidence(report.evidence())
+                .peopleCount(report.peopleCount() == null ? 0 : report.peopleCount())
+                .evidence(StringUtils.hasLength(report.evidence()) ? report.evidence() : EPMTY_STRING)
                 .meetWithSenior(YES.equals(report.meetWithSenior()))
                 .build();
     }
