@@ -48,6 +48,8 @@ public class Report {
     private Integer peopleCount;
 
     private LocalDate date;
+
+    @Column(name = "evidence", length = 3000)
     private String evidence;
 
     @Column(name = "meet_with_senior")
