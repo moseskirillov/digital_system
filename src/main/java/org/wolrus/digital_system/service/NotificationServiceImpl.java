@@ -20,7 +20,7 @@ public class NotificationServiceImpl implements NotificationService {
     @RateLimiter(name = "sendNotification")
     public void sendNotification(String chatId, String message) {
         try {
-            telegramReportClient.sendMessage(chatId, message, true);
+            telegramReportClient.sendMessage(chatId, message, true, "html");
         } catch (FeignException e) {
             log.error(TELEGRAM_SEND_MESSAGE_ERROR, e);
         }

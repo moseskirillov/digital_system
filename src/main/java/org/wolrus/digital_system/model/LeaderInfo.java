@@ -1,3 +1,3 @@
 package org.wolrus.digital_system.model;
 
-public record LeaderInfo(String name, String telegramId) {}
+public record LeaderInfo(Integer id, String name, String telegramId) {}

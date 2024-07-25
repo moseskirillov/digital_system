@@ -2,8 +2,10 @@ package org.wolrus.digital_system.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -20,14 +22,15 @@ public class Leader {
     private Integer id;
     private String name;
 
-    @Column(name  = "telegram_id")
+    @Column(name = "telegram_id")
     private Long telegramId;
 
-    @Column(name  = "telegram_login")
+    @Column(name = "telegram_login")
     private String telegramLogin;
 
-    @Column(name = "region_leader_id")
-    private Integer regionLeaderId;
+    @JoinColumn(name = "region_leader_id")
+    @ManyToOne(fetch = FetchType.EAGER)
+    private RegionalLeader regionalLeader;
 
     @OneToMany
     @JoinColumn(name = "leader_id")

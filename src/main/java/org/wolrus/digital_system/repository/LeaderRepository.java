@@ -8,7 +8,9 @@ import java.util.List;
 
 public interface LeaderRepository extends JpaRepository<Leader, Long> {
     @Query("""
-            select l from Leader l join fetch l.groups g
+            select l from Leader l
+            join fetch l.groups g
+            join fetch l.regionalLeader rl
             where g.isOpen and g.day = :day
             and l.telegramId is not null
             and l.telegramLogin != 'Pelna'
@@ -16,8 +18,8 @@ public interface LeaderRepository extends JpaRepository<Leader, Long> {
             and g.age != 'Молодежные (до 25)'
             and g.age != 'Молодежные (после 25)'
             and g.age != 'Подростки'
-            and l.regionLeaderId is not null
-            and l.regionLeaderId != :regionLeaderId
+            and l.regionalLeader.id is not null
+            and l.regionalLeader.id != :regionLeaderId
             """)
     List<Leader> findGroupLeadersByDay(String day, Integer regionLeaderId);
 }

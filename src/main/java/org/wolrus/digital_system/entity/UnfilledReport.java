@@ -29,6 +29,9 @@ public class UnfilledReport {
     @SequenceGenerator(name = "unfilled_reports_seq", allocationSize = 1, schema = "homegroup_bot")
     private Long id;
 
+    @Column(name = "leader_id")
+    private Integer leaderId;
+
     @Column(name = "leader_name")
     private String leaderName;
 

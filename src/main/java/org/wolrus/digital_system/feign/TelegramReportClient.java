@@ -10,6 +10,7 @@ public interface TelegramReportClient {
     @PostMapping("/sendMessage")
     void sendMessage(@RequestParam("chat_id") String chatId,
                      @RequestParam("text") String text,
-                     @RequestParam("disable_web_page_preview") Boolean disableWebPagePreview);
+                     @RequestParam("disable_web_page_preview") Boolean disableWebPagePreview,
+                     @RequestParam("parse_mode") String parseMode);
 
 }

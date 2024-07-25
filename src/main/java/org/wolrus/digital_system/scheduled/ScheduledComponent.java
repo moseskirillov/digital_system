@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.wolrus.digital_system.entity.Leader;
+import org.wolrus.digital_system.entity.RegionalLeader;
 import org.wolrus.digital_system.entity.UnfilledReport;
 import org.wolrus.digital_system.feign.UrlShorterClient;
 import org.wolrus.digital_system.model.LeaderInfo;
@@ -14,14 +16,21 @@ import org.wolrus.digital_system.service.NotificationService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ScheduledComponent {
+
+    @Value("${telegram.groups-admin-id}")
+    private String GROUPS_ADMIN_TELEGRAM_ID;
 
     @Value("${yandex.form.url}")
     private String YANDEX_FORM_URL;
@@ -50,6 +59,32 @@ public class ScheduledComponent {
         log.info("Ежедневная рассылка напоминаний о заполнении отчетов завершена");
     }
 
+    @Scheduled(cron = "0 0 21 * * MON", zone = "Europe/Moscow")
+    public void notifyAdmin() {
+        log.info("Запуск рассылки информации о незаполненных отчетах");
+        var now = LocalDate.now().minusDays(2);
+        var unfilledReports = unfilledReportRepository.findALLByDate(now);
+        if (unfilledReports.isEmpty()) {
+            log.info("Нет незаполненных отчетов");
+            return;
+        }
+        var leadersMapInfo = createLeadersMapInfo();
+        unfilledReports.forEach(unfilledReport -> {
+            var leaderId = unfilledReport.getLeaderId();
+            var leader = leaderRepository.findById(Long.valueOf(leaderId));
+            var leaderName = unfilledReport.getLeaderName();
+            var regionalLeaderName = leader.map(Leader::getRegionalLeader)
+                    .map(RegionalLeader::getName)
+                    .orElse("Не определен");
+            if (!leadersMapInfo.containsKey(regionalLeaderName)) {
+                leadersMapInfo.put(regionalLeaderName, new ArrayList<>());
+            }
+            leadersMapInfo.get(regionalLeaderName).add(leaderName);
+        });
+        var message = createReportText(unfilledReports.size(), leadersMapInfo);
+        notificationService.sendNotification(GROUPS_ADMIN_TELEGRAM_ID, message);
+    }
+
     private void notifyReportsLeaders() {
         log.info("Запуск рассылки напоминаний о заполнении отчетов");
         var currentWeekDay = new GregorianCalendar(LOCALE).getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, LOCALE);
@@ -57,7 +92,7 @@ public class ScheduledComponent {
         log.info(String.format("Определен день недели: %s", formattedDay));
         var leaders = leaderRepository.findGroupLeadersByDay(formattedDay, REGION_LEADER_ID)
                 .stream()
-                .map(e -> new LeaderInfo(e.getName(), String.valueOf(e.getTelegramId())))
+                .map(e -> new LeaderInfo(e.getId(), e.getName(), String.valueOf(e.getTelegramId())))
                 .toList();
         leaders.forEach(leaderInfo -> {
             var leaderName = leaderInfo.name();
@@ -69,6 +104,7 @@ public class ScheduledComponent {
             notificationService.sendNotification(telegramId, message);
             var unfilledReport = UnfilledReport.builder()
                     .reportDate(LocalDate.now())
+                    .leaderId(leaderInfo.id())
                     .leaderName(leaderName)
                     .leaderTelegramId(telegramId)
                     .build();
@@ -97,4 +133,28 @@ public class ScheduledComponent {
         return urlShorterClient.urlShorter(formUrl);
     }
 
+    private Map<String, List<String>> createLeadersMapInfo() {
+        return new HashMap<>() {
+            @Override
+            public String toString() {
+                var sb = new StringBuilder();
+                for (var entry : this.entrySet()) {
+                    var value = String.join("\n", entry.getValue());
+                    sb.append("Лидер: ")
+                            .append("<b>")
+                            .append(entry.getKey())
+                            .append("</b>")
+                            .append(": " + "\n")
+                            .append(value)
+                            .append("\n")
+                            .append("\n");
+                }
+                return sb.toString();
+            }
+        };
+    }
+
+    private String createReportText(int size, Map<String, List<String>> leadersMapInfo) {
+        return String.format("Общее количество незаполненных отчетов: %s \n", size) + "\n" + leadersMapInfo;
+    }
 }

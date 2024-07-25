@@ -30,7 +30,8 @@ data:
     id: ${REGION_LEADER_ID}
 telegram:
   token: ${TELEGRAM_TOKEN}
-  admin-id: ${TELEGRAM_ADMIN_ID}
+  service-admin-id: ${SERVICE_ADMIN_TELEGRAM_ID}
+  groups-admin-id: ${GROUPS_ADMIN_TELEGRAM_ID}
 resilience4j.rateLimiter:
   configs:
     default:
