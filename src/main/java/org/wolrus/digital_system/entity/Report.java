@@ -55,9 +55,9 @@ public class Report {
     @Column(name = "meet_with_senior")
     private Boolean meetWithSenior;
 
-    public static Report of(ReportRequest report) {
+    public static Report of(ReportRequest report, LocalDate date) {
         return Report.builder()
-                .date(LocalDate.now())
+                .date(date)
                 .leaderName(report.name())
                 .groupIsDone(YES.equals(report.groupIsDone()))
                 .peopleCount(report.peopleCount() == null ? 0 : report.peopleCount())

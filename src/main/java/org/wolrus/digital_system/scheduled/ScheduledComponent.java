@@ -92,23 +92,24 @@ public class ScheduledComponent {
         log.info(String.format("Определен день недели: %s", formattedDay));
         var leaders = leaderRepository.findGroupLeadersByDay(formattedDay, REGION_LEADER_ID)
                 .stream()
-                .map(e -> new LeaderInfo(e.getId(), e.getName(), String.valueOf(e.getTelegramId())))
+                .map(LeaderInfo::of)
                 .toList();
         leaders.forEach(leaderInfo -> {
             var leaderName = leaderInfo.name();
-            log.info(String.format("Отправка напоминания лидеру: %s", leaderName));
             var telegramId = leaderInfo.telegramId();
-            var now = DATE_FORMATTER.format(LocalDate.now());
-            var shortUrl = getShortUrl(leaderName, now);
+            var now = LocalDate.now();
+            var nowAsString = DATE_FORMATTER.format(now);
+            var shortUrl = getShortUrl(leaderName, nowAsString);
             var message = String.format(REPORT_MESSAGE, shortUrl);
+            log.info(String.format("Отправка напоминания лидеру: %s", leaderName));
             notificationService.sendNotification(telegramId, message);
             var unfilledReport = UnfilledReport.builder()
-                    .reportDate(LocalDate.now())
+                    .reportDate(now)
                     .leaderId(leaderInfo.id())
                     .leaderName(leaderName)
                     .leaderTelegramId(telegramId)
                     .build();
-            unfilledReportRepository.saveAndFlush(unfilledReport);
+            unfilledReportRepository.save(unfilledReport);
         });
         log.info("Запуск рассылки напоминаний о заполнении отчетов завершен");
     }

@@ -24,9 +24,9 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public void createReport(ReportRequest request) {
         log.info("Получен отчет {}", request.toString());
-        var report = Report.of(request);
-        reportRepository.saveAndFlush(report);
         var date = parseDate(request.date());
+        var report = Report.of(request, date);
+        reportRepository.saveAndFlush(report);
         var unfilledReport = unfilledReportRepository.findByLeaderNameAndReportDate(request.name(), date);
         unfilledReport.ifPresent(value -> {
             log.info("Найден отчет в базе не заполненных: {}", request);
