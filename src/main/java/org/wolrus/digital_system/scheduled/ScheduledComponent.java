@@ -59,7 +59,7 @@ public class ScheduledComponent {
         log.info("Ежедневная рассылка напоминаний о заполнении отчетов завершена");
     }
 
-    @Scheduled(cron = "0 0 21 * * MON", zone = "Europe/Moscow")
+    @Scheduled(cron = "0 0 19 * * MON", zone = "Europe/Moscow")
     public void notifyAdmin() {
         log.info("Запуск рассылки информации о незаполненных отчетах");
         var now = LocalDate.now().minusDays(2);
@@ -73,16 +73,18 @@ public class ScheduledComponent {
             var leaderId = unfilledReport.getLeaderId();
             var leader = leaderRepository.findById(Long.valueOf(leaderId));
             var leaderName = unfilledReport.getLeaderName();
+            var date = unfilledReport.getReportDate();
             var regionalLeaderName = leader.map(Leader::getRegionalLeader)
                     .map(RegionalLeader::getName)
                     .orElse("Не определен");
             if (!leadersMapInfo.containsKey(regionalLeaderName)) {
                 leadersMapInfo.put(regionalLeaderName, new ArrayList<>());
             }
-            leadersMapInfo.get(regionalLeaderName).add(leaderName);
+            leadersMapInfo.get(regionalLeaderName).add(String.format("%s за %s", leaderName, DATE_FORMATTER.format(date)));
         });
         var message = createReportText(unfilledReports.size(), leadersMapInfo);
         notificationService.sendNotification(GROUPS_ADMIN_TELEGRAM_ID, message);
+        log.info("Сообщение о незаполненных отчетах отправлено администратору");
     }
 
     private void notifyReportsLeaders() {
@@ -94,11 +96,11 @@ public class ScheduledComponent {
                 .stream()
                 .map(LeaderInfo::of)
                 .toList();
-        leaders.forEach(leaderInfo -> {
-            var leaderName = leaderInfo.name();
-            var telegramId = leaderInfo.telegramId();
+        for (var leaderInfo : leaders) {
             var now = LocalDate.now();
             var nowAsString = DATE_FORMATTER.format(now);
+            var leaderName = leaderInfo.name();
+            var telegramId = leaderInfo.telegramId();
             var shortUrl = getShortUrl(leaderName, nowAsString);
             var message = String.format(REPORT_MESSAGE, shortUrl);
             log.info(String.format("Отправка напоминания лидеру: %s", leaderName));
@@ -110,14 +112,14 @@ public class ScheduledComponent {
                     .leaderTelegramId(telegramId)
                     .build();
             unfilledReportRepository.save(unfilledReport);
-        });
+        }
         log.info("Запуск рассылки напоминаний о заполнении отчетов завершен");
     }
 
     private void notifyUnfilledReportsLeaders() {
         log.info("Запуск рассылки повторных напоминаний о заполнении отчетов");
         var reports = unfilledReportRepository.findAll();
-        log.info(String.format("Общее количество незаполненных отчетов: %s", reports.size()));
+        log.info(String.format("Общее количество незаполненных отчетов: <b>%s</b>", reports.size()));
         reports.forEach(report -> {
             var leaderName = report.getLeaderName();
             var leaderTelegramId = report.getLeaderTelegramId();
