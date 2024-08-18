@@ -32,6 +32,7 @@ telegram:
   token: ${TELEGRAM_TOKEN}
   service-admin-id: ${SERVICE_ADMIN_TELEGRAM_ID}
   groups-admin-id: ${GROUPS_ADMIN_TELEGRAM_ID}
+  pastor-id: ${PASTOR_TELEGRAM_ID}
 resilience4j.rateLimiter:
   configs:
     default:

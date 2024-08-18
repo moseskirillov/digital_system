@@ -10,7 +10,10 @@ import org.wolrus.digital_system.entity.RegionalLeader;
 import org.wolrus.digital_system.entity.UnfilledReport;
 import org.wolrus.digital_system.feign.UrlShorterClient;
 import org.wolrus.digital_system.model.LeaderInfo;
+import org.wolrus.digital_system.model.NotCompletedGroup;
+import org.wolrus.digital_system.repository.GroupRepository;
 import org.wolrus.digital_system.repository.LeaderRepository;
+import org.wolrus.digital_system.repository.ReportRepository;
 import org.wolrus.digital_system.repository.UnfilledReportRepository;
 import org.wolrus.digital_system.service.NotificationService;
 
@@ -29,14 +32,17 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ScheduledComponent {
 
-    @Value("${telegram.groups-admin-id}")
-    private String GROUPS_ADMIN_TELEGRAM_ID;
-
     @Value("${yandex.form.url}")
     private String YANDEX_FORM_URL;
 
     @Value("${data.region-leader.id}")
     private Integer REGION_LEADER_ID;
+
+    @Value("${telegram.pastor-id}")
+    private String PASTOR_TELEGRAM_ID;
+
+    @Value("${telegram.groups-admin-id}")
+    private String GROUPS_ADMIN_TELEGRAM_ID;
 
     private static final Locale LOCALE = Locale.of("ru", "RU");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -46,8 +52,10 @@ public class ScheduledComponent {
     private static final String REPEATED_REPORT_MESSAGE = "Добрый вечер, у вас есть незаполненный отчет. " +
             "Пожалуйста, заполните его по ссылке: %s";
 
+    private final GroupRepository groupRepository;
     private final UrlShorterClient urlShorterClient;
     private final LeaderRepository leaderRepository;
+    private final ReportRepository reportRepository;
     private final NotificationService notificationService;
     private final UnfilledReportRepository unfilledReportRepository;
 
@@ -63,13 +71,13 @@ public class ScheduledComponent {
     public void notifyAdmin() {
         log.info("Запуск рассылки информации о незаполненных отчетах");
         var now = LocalDate.now().minusDays(2);
-        var unfilledReports = unfilledReportRepository.findALLByDate(now);
+        var unfilledReports = unfilledReportRepository.findAllByDate(now);
         if (unfilledReports.isEmpty()) {
             log.info("Нет незаполненных отчетов");
             return;
         }
         var leadersMapInfo = createLeadersMapInfo();
-        unfilledReports.forEach(unfilledReport -> {
+        for (var unfilledReport : unfilledReports) {
             var leaderId = unfilledReport.getLeaderId();
             var leader = leaderRepository.findById(Long.valueOf(leaderId));
             var leaderName = unfilledReport.getLeaderName();
@@ -81,17 +89,37 @@ public class ScheduledComponent {
                 leadersMapInfo.put(regionalLeaderName, new ArrayList<>());
             }
             leadersMapInfo.get(regionalLeaderName).add(String.format("%s за %s", leaderName, DATE_FORMATTER.format(date)));
-        });
+        }
         var message = createReportText(unfilledReports.size(), leadersMapInfo);
         notificationService.sendNotification(GROUPS_ADMIN_TELEGRAM_ID, message);
-        log.info("Сообщение о незаполненных отчетах отправлено администратору");
+        log.info("Сообщения о незаполненных отчетах отправлены");
+    }
+
+    @Scheduled(cron = "0 0 19 1 * *", zone = "Europe/Moscow")
+    public void notifyReportsCount() {
+        log.info("Запуск рассылки месячного отчета");
+        var openedGroups = groupRepository.countAllByIsOpenIsTrue();
+        log.info("Общее количество открытых групп: {}", openedGroups);
+        var completedGroupsByMonth = reportRepository.countAllCompletedGroupsByMonth();
+        log.info("Общее количество прошедших групп: {}", completedGroupsByMonth);
+        var notCompleted = reportRepository.countAllNotCompletedGroupsByMonth();
+        log.info("Общее количество не прошедших групп: {}", notCompleted);
+        var notCompletedGroups = reportRepository.findThreeTimesNotCompletedGroupsByMonth()
+                .stream()
+                .map(NotCompletedGroup::of)
+                .toList();
+        log.info("Общее количество групп, не прошедших три раза: {}", notCompletedGroups.size());
+        var text = groupsReportText(openedGroups, completedGroupsByMonth, notCompleted, notCompletedGroups);
+        notificationService.sendNotification(GROUPS_ADMIN_TELEGRAM_ID, text);
+        notificationService.sendNotification(PASTOR_TELEGRAM_ID, text);
+        log.info("Рассылка месячного отчета завершена");
     }
 
     private void notifyReportsLeaders() {
         log.info("Запуск рассылки напоминаний о заполнении отчетов");
         var currentWeekDay = new GregorianCalendar(LOCALE).getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, LOCALE);
         var formattedDay = currentWeekDay.substring(0, 1).toUpperCase() + currentWeekDay.substring(1);
-        log.info(String.format("Определен день недели: %s", formattedDay));
+        log.info("Определен день недели: {}", formattedDay);
         var leaders = leaderRepository.findGroupLeadersByDay(formattedDay, REGION_LEADER_ID)
                 .stream()
                 .map(LeaderInfo::of)
@@ -103,7 +131,7 @@ public class ScheduledComponent {
             var telegramId = leaderInfo.telegramId();
             var shortUrl = getShortUrl(leaderName, nowAsString);
             var message = String.format(REPORT_MESSAGE, shortUrl);
-            log.info(String.format("Отправка напоминания лидеру: %s", leaderName));
+            log.info("Отправка напоминания лидеру: {}", leaderName);
             notificationService.sendNotification(telegramId, message);
             var unfilledReport = UnfilledReport.builder()
                     .reportDate(now)
@@ -119,15 +147,15 @@ public class ScheduledComponent {
     private void notifyUnfilledReportsLeaders() {
         log.info("Запуск рассылки повторных напоминаний о заполнении отчетов");
         var reports = unfilledReportRepository.findAll();
-        log.info(String.format("Общее количество незаполненных отчетов: <b>%s</b>", reports.size()));
-        reports.forEach(report -> {
+        log.info("Общее количество незаполненных отчетов: {}", reports.size());
+        for (var report : reports) {
             var leaderName = report.getLeaderName();
             var leaderTelegramId = report.getLeaderTelegramId();
             var reportDate = report.getReportDate();
             var formattedDate = DATE_FORMATTER.format(reportDate);
-            log.info(String.format("Отправка повторного напоминания лидеру: %s за дату: %s", leaderName, reportDate));
+            log.info("Отправка повторного напоминания лидеру: {} за дату: {}", leaderName, reportDate);
             notificationService.sendNotification(leaderTelegramId, String.format(REPEATED_REPORT_MESSAGE, getShortUrl(leaderName, formattedDate)));
-        });
+        }
         log.info("Запуск рассылки повторных напоминаний о заполнении отчетов завершен");
     }
 
@@ -159,5 +187,45 @@ public class ScheduledComponent {
 
     private String createReportText(int size, Map<String, List<String>> leadersMapInfo) {
         return String.format("Общее количество незаполненных отчетов: %s \n", size) + "\n" + leadersMapInfo;
+    }
+
+    private String groupsReportText(Integer openedGroups,
+                                    Integer completedGroupsByMonth,
+                                    Integer notCompleted,
+                                    List<NotCompletedGroup> notCompletedGroups) {
+        var title = String.format("Отчет по домашним группам за %s\n\n", getMonthName(LocalDate.now().getMonthValue() - 1));
+        return new StringBuilder()
+                .append(title)
+                .append(String.format("Открыто групп: %s\n", openedGroups))
+                .append(String.format("Прошло групп: %s\n", completedGroupsByMonth))
+                .append(String.format("Не прошло групп: %s\n\n", notCompleted))
+                .append(notCompletedGroupsReportText(notCompletedGroups))
+                .toString();
+    }
+
+    private StringBuilder notCompletedGroupsReportText(List<NotCompletedGroup> notCompletedGroups) {
+        var sb = new StringBuilder();
+        for (var notCompletedGroup : notCompletedGroups) {
+            sb.append(String.format("%s, не прошла: %s раз(а)\n", notCompletedGroup.name(), notCompletedGroup.count()));
+        }
+        return sb;
+    }
+
+    private String getMonthName(int number) {
+        return switch (number) {
+            case 1 -> "Январь";
+            case 2 -> "Февраль";
+            case 3 -> "Март";
+            case 4 -> "Апрель";
+            case 5 -> "Май";
+            case 6 -> "Июнь";
+            case 7 -> "Июль";
+            case 8 -> "Август";
+            case 9 -> "Сентябрь";
+            case 10 -> "Октябрь";
+            case 11 -> "Ноябрь";
+            case 12 -> "Декабрь";
+            default -> throw new IllegalStateException("Ошибка опредения меясца: " + number);
+        };
     }
 }

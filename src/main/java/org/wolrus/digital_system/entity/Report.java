@@ -34,8 +34,8 @@ public class Report {
     private static final String EPMTY_STRING = "";
 
     @Id
-    @SequenceGenerator(name = "reports_seq", allocationSize = 1, schema = "homegroup_bot")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "reports_seq")
+    @SequenceGenerator(name = "reports_seq", allocationSize = 1, schema = "homegroup_bot")
     private Long id;
 
     @Column(name = "leader_name")
@@ -65,5 +65,4 @@ public class Report {
                 .meetWithSenior(YES.equals(report.meetWithSenior()))
                 .build();
     }
-
 }

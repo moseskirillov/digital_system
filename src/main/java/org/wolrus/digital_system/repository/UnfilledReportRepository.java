@@ -12,5 +12,5 @@ public interface UnfilledReportRepository extends JpaRepository<UnfilledReport, 
     Optional<UnfilledReport> findByLeaderNameAndReportDate(String leaderName, LocalDate reportDate);
 
     @Query("select u from UnfilledReport u where u.reportDate <= :date")
-    List<UnfilledReport> findALLByDate(LocalDate date);
+    List<UnfilledReport> findAllByDate(LocalDate date);
 }
