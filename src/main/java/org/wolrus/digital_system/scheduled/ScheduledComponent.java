@@ -44,6 +44,7 @@ public class ScheduledComponent {
     @Value("${telegram.groups-admin-id}")
     private String GROUPS_ADMIN_TELEGRAM_ID;
 
+    private static final String HOME_GROUP_TYPE = "Взрослые";
     private static final Locale LOCALE = Locale.of("ru", "RU");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
@@ -92,13 +93,14 @@ public class ScheduledComponent {
         }
         var message = createReportText(unfilledReports.size(), leadersMapInfo);
         notificationService.sendNotification(GROUPS_ADMIN_TELEGRAM_ID, message);
+        notificationService.sendNotification(PASTOR_TELEGRAM_ID, message);
         log.info("Сообщения о незаполненных отчетах отправлены");
     }
 
     @Scheduled(cron = "0 0 19 1 * *", zone = "Europe/Moscow")
     public void notifyReportsCount() {
         log.info("Запуск рассылки месячного отчета");
-        var openedGroups = groupRepository.countAllByIsOpenIsTrue();
+        var openedGroups = groupRepository.countAllByIsOpenIsTrueAndAge(HOME_GROUP_TYPE);
         log.info("Общее количество открытых групп: {}", openedGroups);
         var completedGroupsByMonth = reportRepository.countAllCompletedGroupsByMonth();
         log.info("Общее количество прошедших групп: {}", completedGroupsByMonth);
@@ -194,13 +196,11 @@ public class ScheduledComponent {
                                     Integer notCompleted,
                                     List<NotCompletedGroup> notCompletedGroups) {
         var title = String.format("Отчет по домашним группам за %s\n\n", getMonthName(LocalDate.now().getMonthValue() - 1));
-        return new StringBuilder()
-                .append(title)
-                .append(String.format("Открыто групп: %s\n", openedGroups))
-                .append(String.format("Прошло групп: %s\n", completedGroupsByMonth))
-                .append(String.format("Не прошло групп: %s\n\n", notCompleted))
-                .append(notCompletedGroupsReportText(notCompletedGroups))
-                .toString();
+        return title +
+               String.format("Открыто групп: %s\n", openedGroups) +
+               String.format("Прошло групп: %s\n", completedGroupsByMonth) +
+               String.format("Не прошло групп: %s\n\n", notCompleted) +
+               notCompletedGroupsReportText(notCompletedGroups);
     }
 
     private StringBuilder notCompletedGroupsReportText(List<NotCompletedGroup> notCompletedGroups) {
