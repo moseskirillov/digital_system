@@ -25,7 +25,6 @@ public class ControllerAdvice {
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<Void> exception(FeignException e) {
         log.error(FEIGN_ERROR_MESSAGE, e);
-        telegramReportClient.sendMessage(TELEGRAM_ADMIN_ID, String.format(FEIGN_ERROR_MESSAGE, e.getMessage()), true, null);
         return ResponseEntity.badRequest().build();
     }
 
