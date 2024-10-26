@@ -19,6 +19,6 @@ public class Group {
     private String age;
     private String type;
 
-    @Column(name  =  "is_open")
+    @Column(name = "is_open")
     private Boolean isOpen;
 }

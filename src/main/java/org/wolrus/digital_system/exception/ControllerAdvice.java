@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.wolrus.digital_system.feign.TelegramReportClient;
 
 @Slf4j
@@ -25,6 +26,11 @@ public class ControllerAdvice {
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<Void> exception(FeignException e) {
         log.error(FEIGN_ERROR_MESSAGE, e);
+        return ResponseEntity.badRequest().build();
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Void> exception() {
         return ResponseEntity.badRequest().build();
     }
 

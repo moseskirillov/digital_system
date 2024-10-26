@@ -7,4 +7,5 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Configuration
 @EnableScheduling
 @EnableFeignClients(basePackages = {"org.wolrus.digital_system.feign"})
-public class AppConfig {}
+public class AppConfig {
+}

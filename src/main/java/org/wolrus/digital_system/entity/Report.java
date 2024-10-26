@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -55,7 +57,11 @@ public class Report {
     @Column(name = "meet_with_senior")
     private Boolean meetWithSenior;
 
-    public static Report of(ReportRequest report, LocalDate date) {
+    @ManyToOne
+    @JoinColumn(name = "group_id")
+    private Group group;
+
+    public static Report of(ReportRequest report, LocalDate date, Group group) {
         return Report.builder()
                 .date(date)
                 .leaderName(report.name())
@@ -63,6 +69,7 @@ public class Report {
                 .peopleCount(report.peopleCount() == null ? 0 : report.peopleCount())
                 .evidence(StringUtils.hasLength(report.evidence()) ? report.evidence() : EPMTY_STRING)
                 .meetWithSenior(YES.equals(report.meetWithSenior()))
+                .group(group)
                 .build();
     }
 }
