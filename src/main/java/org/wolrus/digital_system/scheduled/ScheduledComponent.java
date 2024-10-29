@@ -115,28 +115,16 @@ public class ScheduledComponent {
             }
             notificationService.sendNotification(telegramId, sb.toString());
         }
-        var leadersWithUnfilledReports = leadersMapInfo.keySet()
-                .stream()
-                .map(LeaderInfo::telegramId)
-                .map(Long::valueOf)
-                .toList();
-        var regionalLeaders = regionalLeaderRepository.findByTelegramIdIn(leadersWithUnfilledReports)
-                .stream()
-                .map(RegionalLeader::getTelegramId)
-                .map(String::valueOf)
-                .toList();
-        sendMessageAboutNotUnfilledReports(regionalLeaders);
         log.info("Сообщения о незаполненных отчетах отправлены");
     }
 
     private void sendMessageAboutNotUnfilledReports(List<String> regionalLeaders) {
         for (var rl : regionalLeaders) {
-            notificationService.sendNotification(rl,
-                    """
-                                    Здравствуйте
-                                    В вашем регионе нет задолженностей по отчетам \uD83D\uDE07
-                                    Спасибо большое
-                            """);
+            notificationService.sendNotification(rl, """
+                    Здравствуйте
+                    В вашем регионе нет задолженностей по отчетам \uD83D\uDE07
+                    Спасибо большое
+                    """);
         }
         notificationService.sendNotification(
                 GROUPS_ADMIN_TELEGRAM_ID,
