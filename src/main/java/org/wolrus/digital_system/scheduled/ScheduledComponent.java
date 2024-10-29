@@ -120,11 +120,12 @@ public class ScheduledComponent {
 
     private void sendMessageAboutNotUnfilledReports(List<String> regionalLeaders) {
         for (var rl : regionalLeaders) {
-            notificationService.sendNotification(rl, """
-                    Здравствуйте
-                    В вашем регионе нет задолженностей по отчетам \uD83D\uDE07
-                    Спасибо большое
-                    """);
+            notificationService.sendNotification(rl,
+                    """
+                            Здравствуйте
+                            В вашем регионе нет задолженностей по отчетам \uD83D\uDE07
+                            Спасибо большое
+                            """);
         }
         notificationService.sendNotification(
                 GROUPS_ADMIN_TELEGRAM_ID,

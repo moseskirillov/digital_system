@@ -11,7 +11,8 @@ public interface LeaderRepository extends JpaRepository<Leader, Long> {
             select l from Leader l
             join fetch l.groups g
             join fetch l.regionalLeader rl
-            where g.isOpen and g.day = :day
+            where g.isOpen
+            and g.day = :day
             and l.telegramId is not null
             and l.telegramLogin != 'Pelna'
             and l.telegramLogin != 'mariKirillova3'

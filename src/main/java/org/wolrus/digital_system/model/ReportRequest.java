@@ -9,5 +9,4 @@ public record ReportRequest(
         String evidence,
         String meetWithSenior,
         String date
-) {
-}
+) {}
