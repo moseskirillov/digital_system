@@ -52,8 +52,8 @@ public class ScheduledComponent {
     private static final Locale LOCALE = Locale.of("ru", "RU");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-    private static final String REPORT_MESSAGE = "Добрый вечер, сегодня, %s у вас проходит домашняя группа. " +
-            "Пожалуйста, не забудьте заполнить отчет по ссылке: %s";
+    private static final String REPORT_MESSAGE = "Добрый вечер, сегодня, %s у вас прошла домашняя группа. " +
+            "Пожалуйста, не забудьте заполнить отчет по ссылке: %s. Спасибо за ваше служение, пусть Бог благословит вас";
     private static final String REPEATED_REPORT_MESSAGE = "Добрый вечер, у вас есть незаполненный отчет. " +
             "Пожалуйста, заполните его по ссылке: %s";
 
@@ -64,14 +64,6 @@ public class ScheduledComponent {
     private final NotificationService notificationService;
     private final UnfilledReportRepository unfilledReportRepository;
     private final RegionalLeaderRepository regionalLeaderRepository;
-
-    @Scheduled(cron = "0 0 21 * * *", zone = "Europe/Moscow")
-    public void notifyLeadersScheduler() {
-        log.info("Запущена ежедневная рассылка напоминаний о заполнении отчетов");
-        notifyUnfilledReportsLeaders();
-        notifyReportsLeaders();
-        log.info("Ежедневная рассылка напоминаний о заполнении отчетов завершена");
-    }
 
     @Scheduled(cron = "0 0 19 * * MON", zone = "Europe/Moscow")
     public void notifyAdmin() {
@@ -118,21 +110,6 @@ public class ScheduledComponent {
         log.info("Сообщения о незаполненных отчетах отправлены");
     }
 
-    private void sendMessageAboutNotUnfilledReports(List<String> regionalLeaders) {
-        for (var rl : regionalLeaders) {
-            notificationService.sendNotification(rl,
-                    """
-                            Здравствуйте
-                            В вашем регионе нет задолженностей по отчетам \uD83D\uDE07
-                            Спасибо большое
-                            """);
-        }
-        notificationService.sendNotification(
-                GROUPS_ADMIN_TELEGRAM_ID,
-                "За эту неделю нет задолженностей по отчетам о домашних группах"
-        );
-    }
-
     @Scheduled(cron = "0 0 19 1 * *", zone = "Europe/Moscow")
     public void notifyReportsCount() {
         log.info("Запуск рассылки месячного отчета");
@@ -153,7 +130,7 @@ public class ScheduledComponent {
         log.info("Рассылка месячного отчета завершена");
     }
 
-    @Scheduled(cron = "0 0 18 * * THU", zone = "Europe/Moscow")
+    @Scheduled(cron = "0 0 18 * * TUE", zone = "Europe/Moscow")
     public void notifyReportsCountForWeek() {
         log.info("Запуск рассылки недельного отчета");
         var openedGroups = groupRepository.countAllByIsOpenIsTrueAndAge(HOME_GROUP_TYPE);
@@ -168,7 +145,8 @@ public class ScheduledComponent {
         log.info("Рассылка недельного отчета завершена");
     }
 
-    private void notifyReportsLeaders() {
+    @Scheduled(cron = "0 0 22 * * *", zone = "Europe/Moscow")
+    public void notifyReportsLeaders() {
         log.info("Запуск рассылки напоминаний о заполнении отчетов");
         var currentWeekDay = new GregorianCalendar(LOCALE).getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, LOCALE);
         var formattedDay = currentWeekDay.substring(0, 1).toUpperCase() + currentWeekDay.substring(1);
@@ -199,7 +177,8 @@ public class ScheduledComponent {
         log.info("Запуск рассылки напоминаний о заполнении отчетов завершен");
     }
 
-    private void notifyUnfilledReportsLeaders() {
+    @Scheduled(cron = "0 0 21 * * *", zone = "Europe/Moscow")
+    public void notifyUnfilledReportsLeaders() {
         log.info("Запуск рассылки повторных напоминаний о заполнении отчетов");
         var reports = unfilledReportRepository.findAll();
         log.info("Общее количество незаполненных отчетов: {}", reports.size());
@@ -216,6 +195,21 @@ public class ScheduledComponent {
             notificationService.sendNotification(leaderTelegramId, message);
         }
         log.info("Запуск рассылки повторных напоминаний о заполнении отчетов завершен");
+    }
+
+    private void sendMessageAboutNotUnfilledReports(List<String> regionalLeaders) {
+        for (var rl : regionalLeaders) {
+            notificationService.sendNotification(rl,
+                    """
+                            Здравствуйте
+                            В вашем регионе нет задолженностей по отчетам \uD83D\uDE07
+                            Спасибо большое
+                            """);
+        }
+        notificationService.sendNotification(
+                GROUPS_ADMIN_TELEGRAM_ID,
+                "За эту неделю нет задолженностей по отчетам о домашних группах"
+        );
     }
 
     private String getShortUrl(String leaderName, String date, Integer groupId) {
