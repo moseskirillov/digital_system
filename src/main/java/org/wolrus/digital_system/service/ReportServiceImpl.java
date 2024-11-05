@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter;
 @RequiredArgsConstructor
 public class ReportServiceImpl implements ReportService {
 
-    private final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     private final GroupRepository groupRepository;
     private final ReportRepository reportRepository;

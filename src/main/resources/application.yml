@@ -35,7 +35,7 @@ telegram:
   pastor-id: ${PASTOR_TELEGRAM_ID}
 resilience4j.rateLimiter:
   configs:
-    default:
+    sendNotification:
       timeoutDuration: 1s
       limitForPeriod: 1
       limit-refresh-period: 1s
