@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UnfilledReportRepository extends JpaRepository<UnfilledReport, Long> {
-    Optional<UnfilledReport> findByLeaderNameAndReportDate(String leaderName, LocalDate reportDate);
+    Optional<UnfilledReport> findByLeaderNameAndReportDateAndGroup_Id(String leaderName, LocalDate reportDate, Integer groupId);
 
     @Query("select u from UnfilledReport u where u.reportDate <= :date")
     List<UnfilledReport> findAllByDate(LocalDate date);

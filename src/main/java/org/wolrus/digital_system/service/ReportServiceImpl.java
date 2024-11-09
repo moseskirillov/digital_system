@@ -34,7 +34,7 @@ public class ReportServiceImpl implements ReportService {
         var group = groupRepository.findById(Long.valueOf(request.groupId()));
         var report = Report.of(request, date, group.orElse(null));
         reportRepository.saveAndFlush(report);
-        var unfilledReport = unfilledReportRepository.findByLeaderNameAndReportDate(request.name(), date);
+        var unfilledReport = unfilledReportRepository.findByLeaderNameAndReportDateAndGroup_Id(request.name(), date, request.groupId());
         unfilledReport.ifPresent(value -> {
             log.info("Найден отчет в базе не заполненных: {}", request);
             unfilledReportRepository.deleteById(value.getId());
