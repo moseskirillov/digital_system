@@ -54,7 +54,7 @@ public class ScheduledComponent {
 
     private static final String REPORT_MESSAGE = "Добрый вечер, сегодня, %s у вас прошла домашняя группа. " +
             "Пожалуйста, не забудьте заполнить отчет по ссылке: %s. Спасибо за ваше служение, пусть Бог благословит вас";
-    private static final String REPEATED_REPORT_MESSAGE = "Добрый вечер, у вас есть незаполненный отчет. " +
+    private static final String REPEATED_REPORT_MESSAGE = "Добрый вечер, у вас есть незаполненный отчет за %s. " +
             "Пожалуйста, заполните его по ссылке: %s";
 
     private final GroupRepository groupRepository;
@@ -88,10 +88,8 @@ public class ScheduledComponent {
             var regionalLeader = leader.map(Leader::getRegionalLeader)
                     .map(LeaderInfo::of)
                     .orElse(LeaderInfo.empty(GROUPS_ADMIN_TELEGRAM_ID));
-            if (!leadersMapInfo.containsKey(regionalLeader)) {
-                leadersMapInfo.put(regionalLeader, new ArrayList<>());
-            }
-            leadersMapInfo.get(regionalLeader).add(String.format("%s за %s", leaderName, DATE_FORMATTER.format(date)));
+            leadersMapInfo.computeIfAbsent(regionalLeader, k -> new ArrayList<>())
+                    .add(String.format("%s за %s", leaderName, DATE_FORMATTER.format(date)));
         }
         var message = createReportText(unfilledReports.size(), leadersMapInfo);
         notificationService.sendNotification(GROUPS_ADMIN_TELEGRAM_ID, message);
@@ -191,7 +189,7 @@ public class ScheduledComponent {
             var groupId = Optional.ofNullable(report.getGroup())
                     .map(Group::getId)
                     .orElse(1);
-            var message = String.format(REPEATED_REPORT_MESSAGE, getShortUrl(leaderName, formattedDate, groupId));
+            var message = String.format(REPEATED_REPORT_MESSAGE, formattedDate, getShortUrl(leaderName, formattedDate, groupId));
             notificationService.sendNotification(leaderTelegramId, message);
         }
         log.info("Запуск рассылки повторных напоминаний о заполнении отчетов завершен");
