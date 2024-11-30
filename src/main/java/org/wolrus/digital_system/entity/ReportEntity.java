@@ -2,12 +2,10 @@ package org.wolrus.digital_system.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
@@ -26,8 +24,8 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "reports", schema = "homegroup_bot")
-public class Report {
+@Table(name = "reports", schema = "homegroups_bot")
+public class ReportEntity {
 
     @Transient
     private static final String YES = "Да";
@@ -36,20 +34,18 @@ public class Report {
     private static final String EPMTY_STRING = "";
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "reports_seq")
-    @SequenceGenerator(name = "reports_seq", allocationSize = 1, schema = "homegroup_bot")
     private Long id;
-
-    @Column(name = "leader_name")
-    private String leaderName;
+    private LocalDate date;
 
     @Column(name = "group_is_done")
     private Boolean groupIsDone;
 
-    @Column(name = "people_count")
-    private Integer peopleCount;
+    @Column(name = "leader_name")
+    private String leaderName;
 
-    private LocalDate date;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private GroupEntity group;
 
     @Column(name = "evidence", length = 3000)
     private String evidence;
@@ -57,12 +53,11 @@ public class Report {
     @Column(name = "meet_with_senior")
     private Boolean meetWithSenior;
 
-    @ManyToOne
-    @JoinColumn(name = "group_id")
-    private Group group;
+    @Column(name = "people_count")
+    private Integer peopleCount;
 
-    public static Report of(ReportRequest report, LocalDate date, Group group) {
-        return Report.builder()
+    public static ReportEntity of(ReportRequest report, LocalDate date, GroupEntity group) {
+        return ReportEntity.builder()
                 .date(date)
                 .leaderName(report.name())
                 .groupIsDone(YES.equals(report.groupIsDone()))
@@ -72,4 +67,5 @@ public class Report {
                 .group(group)
                 .build();
     }
+
 }

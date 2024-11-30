@@ -24,7 +24,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "unfilled_reports", schema = "homegroup_bot")
-public class UnfilledReport {
+public class UnfilledReportEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "unfilled_reports_seq")
@@ -45,6 +45,6 @@ public class UnfilledReport {
 
     @ManyToOne
     @JoinColumn(name = "group_id")
-    private Group group;
+    private GroupEntity group;
 
 }

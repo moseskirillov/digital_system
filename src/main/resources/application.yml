@@ -7,10 +7,10 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   jpa:
-    show-sql: false
+    show-sql: true
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     generate-ddl: false
   cloud:
     openfeign:

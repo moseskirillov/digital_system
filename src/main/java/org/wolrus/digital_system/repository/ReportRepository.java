@@ -2,13 +2,13 @@ package org.wolrus.digital_system.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.wolrus.digital_system.entity.Report;
+import org.wolrus.digital_system.entity.ReportEntity;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface ReportRepository extends JpaRepository<Report, Long> {
+public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
 
     @Query(value = """
             select count(*)
@@ -52,6 +52,6 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
             where c > 3""", nativeQuery = true)
     List<Object[]> findThreeTimesNotCompletedGroupsByMonth();
 
-    Optional<Report> findByGroupIdAndDate(Integer group_id, LocalDate date);
+    Optional<ReportEntity> findByGroupIdAndDate(Integer group_id, LocalDate date);
 
 }

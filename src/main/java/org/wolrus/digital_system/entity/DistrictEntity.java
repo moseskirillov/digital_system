@@ -10,15 +10,14 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "groups", schema = "homegroup_bot")
-public class Group {
+@Table(name = "districts", schema = "homegroups_bot")
+public class DistrictEntity {
+
     @Id
     private Integer id;
-    private String metro;
-    private String day;
-    private String age;
-    private String type;
+    private String title;
 
-    @Column(name = "is_open")
-    private Boolean isOpen;
+    @Column(name = "is_mo")
+    private Boolean isMo = false;
+
 }
