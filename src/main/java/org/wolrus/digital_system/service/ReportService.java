@@ -30,7 +30,7 @@ public class ReportService {
         if (reportRepository.findByGroupIdAndDate(groupId, date).isPresent()) {
             return;
         }
-        var group = groupRepository.findById(Long.valueOf(request.groupId()));
+        var group = groupRepository.findById(request.groupId());
         var report = ReportEntity.of(request, date, group.orElse(null));
         reportRepository.saveAndFlush(report);
         var unfilledReport = unfilledReportRepository.findByLeaderNameAndReportDateAndGroup_Id(request.name(), date, request.groupId());

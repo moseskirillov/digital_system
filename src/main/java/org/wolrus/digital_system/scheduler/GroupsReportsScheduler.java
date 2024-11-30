@@ -1,23 +1,23 @@
-package org.wolrus.digital_system.scheduled;
+package org.wolrus.digital_system.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.wolrus.digital_system.entity.UnfilledReportEntity;
 import org.wolrus.digital_system.entity.GroupEntity;
 import org.wolrus.digital_system.entity.GroupLeaderEntity;
 import org.wolrus.digital_system.entity.RegionalLeaderEntity;
+import org.wolrus.digital_system.entity.UnfilledReportEntity;
 import org.wolrus.digital_system.entity.UserEntity;
 import org.wolrus.digital_system.feign.UrlShorterClient;
 import org.wolrus.digital_system.model.LeaderInfo;
 import org.wolrus.digital_system.model.NotCompletedGroup;
-import org.wolrus.digital_system.repository.ReportRepository;
-import org.wolrus.digital_system.repository.UnfilledReportRepository;
 import org.wolrus.digital_system.repository.GroupLeaderRepository;
 import org.wolrus.digital_system.repository.GroupRepository;
 import org.wolrus.digital_system.repository.RegionalLeaderRepository;
+import org.wolrus.digital_system.repository.ReportRepository;
+import org.wolrus.digital_system.repository.UnfilledReportRepository;
 import org.wolrus.digital_system.service.NotificationService;
 
 import java.time.LocalDate;
@@ -99,7 +99,7 @@ public class GroupsReportsScheduler {
 
     @Scheduled(cron = "0 0 18 * * TUE", zone = "Europe/Moscow")
     public void reportsCountForMonthNotifier() {
-        log.info("Запуск рассылки недельного отчета");
+        log.info("Запуск рассылки месячного отчета");
         var openedGroups = groupRepository.countAllByIsOpenIsTrueAndAge(HOME_GROUP_TYPE);
         log.info("Общее количество открытых групп за месяц: {}", openedGroups);
         var completedGroupsByMonth = reportRepository.countAllCompletedGroupsByMonth();
@@ -138,7 +138,7 @@ public class GroupsReportsScheduler {
         var currentWeekDay = new GregorianCalendar(LOCALE).getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, LOCALE);
         var formattedDay = currentWeekDay.substring(0, 1).toUpperCase() + currentWeekDay.substring(1);
         log.info("Определен день недели: {}", formattedDay);
-        var leaders = groupLeaderRepository.findAllByGroups_GroupsDays_Day_TitleAndRegionalLeader_User_TelegramIdNot(formattedDay, REGION_LEADER_ID);
+        var leaders = groupLeaderRepository.findAllByGroups_GroupsDays_Day_TitleAndRegionalLeader_User_TelegramIdNotAndGroups_Age(formattedDay, REGION_LEADER_ID, HOME_GROUP_TYPE);
         for (var leaderEntity : leaders) {
             var now = LocalDate.now();
             var nowAsString = DATE_FORMATTER.format(now);
@@ -146,8 +146,7 @@ public class GroupsReportsScheduler {
             var telegramId = leaderEntity.getUser().getTelegramId();
             var groups = leaderEntity.getGroups();
             for (var group : groups) {
-                var groupId = group.getId();
-                var shortUrl = getShortUrl(leaderName, nowAsString, groupId);
+                var shortUrl = getShortUrl(leaderName, nowAsString, group.getId());
                 var message = String.format(REPORT_MESSAGE, nowAsString, shortUrl);
                 log.info("Отправка напоминания лидеру: {}", leaderName);
                 notificationService.sendNotification(String.valueOf(telegramId), message);
@@ -171,7 +170,6 @@ public class GroupsReportsScheduler {
         log.info("Общее количество незаполненных отчетов: {}", reports.size());
         for (var report : reports) {
             var leaderName = report.getLeaderName();
-            var leaderTelegramId = report.getLeaderTelegramId();
             var reportDate = report.getReportDate();
             var formattedDate = DATE_FORMATTER.format(reportDate);
             log.info("Отправка повторного напоминания лидеру: {} за дату: {}", leaderName, reportDate);
@@ -179,7 +177,7 @@ public class GroupsReportsScheduler {
                     .map(GroupEntity::getId)
                     .orElse(1);
             var message = String.format(REPEATED_REPORT_MESSAGE, formattedDate, getShortUrl(leaderName, formattedDate, groupId));
-            notificationService.sendNotification(leaderTelegramId, message);
+            notificationService.sendNotification(report.getLeaderTelegramId(), message);
         }
         log.info("Запуск рассылки повторных напоминаний о заполнении отчетов завершен");
     }
