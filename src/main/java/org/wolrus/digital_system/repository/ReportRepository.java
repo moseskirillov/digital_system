@@ -12,7 +12,7 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
 
     @Query(value = """
             select count(*)
-            from homegroup_bot.reports r
+            from homegroups_bot.reports r
             where r.group_is_done = true
             and date >= (current_date - interval '1 month')
             """, nativeQuery = true)
@@ -20,7 +20,7 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
 
     @Query(value = """
             select count(*)
-            from homegroup_bot.reports r
+            from homegroups_bot.reports r
             where r.group_is_done = true
             and date >= (current_date - interval '1 week')
             """, nativeQuery = true)
@@ -28,7 +28,7 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
 
     @Query(value = """
             select count(*)
-            from homegroup_bot.reports r
+            from homegroups_bot.reports r
             where r.group_is_done = false
             and r.date >= (current_date - interval '1 month')
             """, nativeQuery = true)
@@ -36,7 +36,7 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
 
     @Query(value = """
             select count(*)
-            from homegroup_bot.reports r
+            from homegroups_bot.reports r
             where r.group_is_done = false
             and r.date >= (current_date - interval '1 week')
             """, nativeQuery = true)
@@ -45,7 +45,7 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
     @Query(value = """
             select r.n, r.c
             from (select leader_name n, count(leader_name) as c
-            from homegroup_bot.reports
+            from homegroups_bot.reports
             where group_is_done = false
             and date >= (current_date - interval '1 month')
             group by leader_name) r

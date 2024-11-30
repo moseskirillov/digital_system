@@ -23,12 +23,12 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "unfilled_reports", schema = "homegroup_bot")
+@Table(name = "unfilled_reports", schema = "homegroups_bot")
 public class UnfilledReportEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "unfilled_reports_seq")
-    @SequenceGenerator(name = "unfilled_reports_seq", allocationSize = 1, schema = "homegroup_bot")
+    @SequenceGenerator(name = "unfilled_reports_seq", allocationSize = 1, schema = "homegroups_bot")
     private Long id;
 
     @Column(name = "leader_id")
