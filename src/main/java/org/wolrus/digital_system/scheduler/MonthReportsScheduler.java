@@ -79,9 +79,9 @@ public class MonthReportsScheduler {
             var monthTitle = Month.of((month == 0) ? 12 : month).getDisplayName(TextStyle.FULL_STANDALONE, LOCALE);
             sb.append(String.format("<b>Отчет по региону за %s\nЛидер %s</b>", monthTitle, user.getFullName()))
                     .append("<pre>");
-            sb.append(String.format("%-12s %-7s %-9s %-8s\n\n", "Имя", "Прошло", "Не прошло", "Людей"));
+            sb.append(String.format("%-14s %-7s %-9s %-8s\n\n", "Имя", "Прошло", "Не прошло", "Людей"));
             for (var report : dataForRegionalLeader) {
-                sb.append(String.format("%-12s %-7d %-9d %-8d\n",
+                sb.append(String.format("%-14s %-7d %-9d %-8d\n",
                         report.getLeaderName(),
                         report.getIsDone(),
                         report.getIsNotDone(),
