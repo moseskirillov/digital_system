@@ -1,7 +1,7 @@
 package org.wolrus.digital_system.model;
 
-public interface ReportForPastor {
-    String getRegionalLeaderName();
+public interface ReportForRegionalLeader {
+    String getLeaderName();
 
     int getIsDone();
 

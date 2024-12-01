@@ -26,8 +26,9 @@ yandex:
   form:
     url: ${YANDEX_FORM_URL}
 data:
-  region-leader:
-    id: ${REGION_LEADER_ID}
+  region-leader-for-ignore:
+    adult: ${REGION_LEADER_ID_FOR_IGNORE_ADULT}
+    young: ${REGION_LEADER_ID_FOR_IGNORE_YOUNG}
 telegram:
   token: ${TELEGRAM_TOKEN}
   service-admin-id: ${SERVICE_ADMIN_TELEGRAM_ID}

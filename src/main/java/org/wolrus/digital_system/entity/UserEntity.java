@@ -46,4 +46,8 @@ public class UserEntity {
     @Column(name = "is_youth_admin")
     private Boolean isYouthAdmin = false;
 
+    public String getFullName() {
+        return this.getLastName() + " " + this.getFirstName();
+    }
+
 }
