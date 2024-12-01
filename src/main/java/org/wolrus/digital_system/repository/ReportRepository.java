@@ -3,6 +3,7 @@ package org.wolrus.digital_system.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.wolrus.digital_system.entity.ReportEntity;
+import org.wolrus.digital_system.model.ReportForGroupLeader;
 import org.wolrus.digital_system.model.ReportForPastor;
 import org.wolrus.digital_system.model.ReportForRegionalLeader;
 
@@ -85,5 +86,15 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
             group by leader_name;
             """, nativeQuery = true)
     List<ReportForRegionalLeader> reportForRegionalLeader(Integer leaderId);
+
+    @Query(value = """
+            select sum(case when group_is_done = true then 1 else 0 end)  as isDone,
+                   sum(case when group_is_done = false then 1 else 0 end) as isNotDone,
+                   sum(r.people_count)                                    as personCount
+            from main_db.homegroup_bot.reports r
+            where date >= (current_date - interval '1 month')
+              and r.leader_name = :name;
+            """, nativeQuery = true)
+    ReportForGroupLeader reportForGroupLeader(String name);
 
 }
