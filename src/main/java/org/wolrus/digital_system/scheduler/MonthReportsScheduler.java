@@ -31,9 +31,6 @@ public class MonthReportsScheduler {
     @Value("${telegram.groups-admin-id}")
     private String GROUPS_ADMIN_TELEGRAM_ID;
 
-    @Value("${data.region-leader-for-ignore.adult}")
-    private Integer REGION_LEADER_ID_FOR_IGNORE_ADULT;
-
     @Value("${data.region-leader-for-ignore.young}")
     private Integer REGION_LEADER_ID_FOR_IGNORE_YOUNG;
 
@@ -66,7 +63,7 @@ public class MonthReportsScheduler {
     @Transactional
     @Scheduled(cron = "0 0 12 1 * ?", zone = "Europe/Moscow")
     public void regionalLeaderNotifier() {
-        var ignoreIds = List.of(REGION_LEADER_ID_FOR_IGNORE_ADULT, REGION_LEADER_ID_FOR_IGNORE_YOUNG);
+        var ignoreIds = List.of(REGION_LEADER_ID_FOR_IGNORE_YOUNG);
         var regionalLeaders = regionalLeaderRepository.findAllByIdNotIn(ignoreIds);
         for (var regionalLeader : regionalLeaders) {
             var dataForRegionalLeader = reportRepository.reportForRegionalLeader(regionalLeader.getId());

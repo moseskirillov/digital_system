@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface GroupLeaderRepository extends JpaRepository<GroupLeaderEntity, Integer> {
     @EntityGraph(attributePaths = {"user", "groups"})
-    List<GroupLeaderEntity> findAllByGroups_GroupsDays_Day_TitleAndRegionalLeader_IdNotAndGroups_Age(String title, Integer regionLeaderId, String age);
+    List<GroupLeaderEntity> findAllByGroups_GroupsDays_Day_TitleAndGroups_Age(String title, String age);
 
     @EntityGraph(attributePaths = {"user", "groups"})
     List<GroupLeaderEntity> findAllByGroups_IsOpenAndGroups_Age(Boolean isOpen, String age);

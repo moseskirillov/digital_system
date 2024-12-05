@@ -53,9 +53,6 @@ public class GroupsReportsScheduler {
     @Value("${telegram.groups-admin-id}")
     private String GROUPS_ADMIN_TELEGRAM_ID;
 
-    @Value("${data.region-leader-for-ignore.adult}")
-    private Integer REGION_LEADER_ID_FOR_IGNORE_ADULT;
-
     @Value("${data.region-leader-for-ignore.young}")
     private Integer REGION_LEADER_ID_FOR_IGNORE_YOUNG;
 
@@ -74,7 +71,7 @@ public class GroupsReportsScheduler {
         var unfilledReports = unfilledReportRepository.findAllByReportDateLessThanEqual(now);
         if (unfilledReports.isEmpty()) {
             log.info("Нет незаполненных отчетов");
-            var ignoreIds = List.of(REGION_LEADER_ID_FOR_IGNORE_ADULT, REGION_LEADER_ID_FOR_IGNORE_YOUNG);
+            var ignoreIds = List.of(REGION_LEADER_ID_FOR_IGNORE_YOUNG);
             var regionalLeaders = regionalLeaderRepository.findAllByIdNotIn(ignoreIds).stream()
                     .map(RegionalLeaderEntity::getUser)
                     .map(UserEntity::getTelegramId)
@@ -142,8 +139,8 @@ public class GroupsReportsScheduler {
         var currentWeekDay = new GregorianCalendar(LOCALE).getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, LOCALE);
         var formattedDay = currentWeekDay.substring(0, 1).toUpperCase() + currentWeekDay.substring(1);
         log.info("Определен день недели: {}", formattedDay);
-        var leaders = groupLeaderRepository.findAllByGroups_GroupsDays_Day_TitleAndRegionalLeader_IdNotAndGroups_Age(
-                formattedDay, REGION_LEADER_ID_FOR_IGNORE_ADULT, HOME_GROUP_TYPE
+        var leaders = groupLeaderRepository.findAllByGroups_GroupsDays_Day_TitleAndGroups_Age(
+                formattedDay, HOME_GROUP_TYPE
         );
         for (var leaderEntity : leaders) {
             var now = LocalDate.now();
