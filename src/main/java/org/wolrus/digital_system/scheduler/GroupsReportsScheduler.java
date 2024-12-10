@@ -98,7 +98,7 @@ public class GroupsReportsScheduler {
         log.info("Сообщения о незаполненных отчетах отправлены");
     }
 
-    @Scheduled(cron = "0 0 18 * * TUE", zone = "Europe/Moscow")
+    @Scheduled(cron = "0 0 18 1 * *", zone = "Europe/Moscow")
     public void reportsCountForMonthNotifier() {
         log.info("Запуск рассылки месячного отчета");
         var openedGroups = groupRepository.countAllByIsOpenIsTrueAndAge(HOME_GROUP_TYPE);
