@@ -58,32 +58,35 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
     Optional<ReportEntity> findByGroupIdAndDate(Integer group_id, LocalDate date);
 
     @Query(value = """
-            select CONCAT(SUBSTRING(rl.name FROM 1 FOR POSITION(' ' IN rl.name) - 1), ' ',
-                          LEFT(SUBSTRING(rl.name FROM POSITION(' ' IN rl.name) + 1), 1)) as regionalLeaderName,
-                   sum(case when group_is_done = true then 1 else 0 end)                 as isDone,
-                   sum(case when group_is_done = false then 1 else 0 end)                as isNotDone,
-                   sum(r.people_count)                                                   as personCount
-            from main_db.homegroup_bot.reports r
-                     left join main_db.homegroup_bot.group_leaders gl on gl.name = r.leader_name
-                     left join main_db.homegroup_bot.regional_leaders rl on rl.id = gl.region_leader_id
-            where date >= (current_date - interval '1 month')
-            group by rl.name
-            order by rl.name desc;
+            select concat(rlu.last_name, ' ', left(rlu.first_name, 1))    as regionalLeaderName,
+                   sum(case when group_is_done = true then 1 else 0 end)  as isDone,
+                   sum(case when group_is_done = false then 1 else 0 end) as isNotDone,
+                   sum(r.people_count)                                    as personCount
+            from main_db.homegroups_bot.reports r
+                     left join homegroups_bot.groups g on g.id = r.group_id
+                     left join homegroups_bot.groups_leaders gl on gl.id = g.leader_id
+                     left join homegroups_bot.regional_leaders rl on rl.id = gl.regional_leader_id
+                     left join homegroups_bot.users rlu on rlu.id = rl.user_id
+            where g.age = 'Взрослые' and date >= (current_date - interval '1 month')
+            group by regionalLeaderName
+            order by regionalLeaderName
             """, nativeQuery = true)
     List<ReportForPastor> reportForPastor();
 
     @Query(value = """
-            select CONCAT(SUBSTRING(r.leader_name FROM 1 FOR POSITION(' ' IN r.leader_name) - 1), ' ',
-                          LEFT(SUBSTRING(r.leader_name FROM POSITION(' ' IN r.leader_name) + 1), 1)) as leaderName,
-                   sum(case when group_is_done = true then 1 else 0 end)                             as isDone,
-                   sum(case when group_is_done = false then 1 else 0 end)                            as isNotDone,
-                   sum(r.people_count)                                                               as personCount
-            from main_db.homegroup_bot.reports r
-                     left join main_db.homegroup_bot.group_leaders gl on gl.name = r.leader_name
-                     left join main_db.homegroup_bot.regional_leaders rl on rl.id = gl.region_leader_id
+            select concat(lu.last_name, ' ', left(lu.first_name, 1))      as leaderName,
+                   sum(case when group_is_done = true then 1 else 0 end)  as isDone,
+                   sum(case when group_is_done = false then 1 else 0 end) as isNotDone,
+                   sum(r.people_count)                                    as personCount
+            from main_db.homegroups_bot.reports r
+                     left join homegroups_bot.groups g on g.id = r.group_id
+                     left join homegroups_bot.groups_leaders gl on gl.id = g.leader_id
+                     left join homegroups_bot.regional_leaders rl on rl.id = gl.regional_leader_id
+                     left join homegroups_bot.users lu on lu.id = gl.user_id
             where date >= (current_date - interval '1 month')
               and rl.id = :leaderId
-            group by leader_name;
+            group by leaderName
+            order by leaderName;
             """, nativeQuery = true)
     List<ReportForRegionalLeader> reportForRegionalLeader(Integer leaderId);
 
@@ -91,9 +94,9 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
             select sum(case when group_is_done = true then 1 else 0 end)  as isDone,
                    sum(case when group_is_done = false then 1 else 0 end) as isNotDone,
                    sum(r.people_count)                                    as personCount
-            from main_db.homegroup_bot.reports r
+            from main_db.homegroups_bot.reports r
             where date >= (current_date - interval '1 month')
-              and r.leader_name = :name;
+              and r.leader_name = :name
             """, nativeQuery = true)
     ReportForGroupLeader reportForGroupLeader(String name);
 
