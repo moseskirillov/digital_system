@@ -1,10 +1,13 @@
 package org.wolrus.digital_system.scheduler;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.wolrus.digital_system.entity.DayEntity;
+import org.wolrus.digital_system.entity.GroupDayEntity;
 import org.wolrus.digital_system.entity.GroupEntity;
 import org.wolrus.digital_system.entity.GroupLeaderEntity;
 import org.wolrus.digital_system.entity.RegionalLeaderEntity;
@@ -64,6 +67,7 @@ public class GroupsReportsScheduler {
     private final UnfilledReportRepository unfilledReportRepository;
     private final RegionalLeaderRepository regionalLeaderRepository;
 
+    @Transactional
     @Scheduled(cron = "0 0 19 * * MON", zone = "Europe/Moscow")
     public void unfilledReportsNotifier() {
         log.info("Запуск рассылки информации о незаполненных отчетах");
@@ -98,6 +102,7 @@ public class GroupsReportsScheduler {
         log.info("Сообщения о незаполненных отчетах отправлены");
     }
 
+    @Transactional
     @Scheduled(cron = "0 0 18 1 * *", zone = "Europe/Moscow")
     public void reportsCountForMonthNotifier() {
         log.info("Запуск рассылки месячного отчета");
@@ -133,7 +138,8 @@ public class GroupsReportsScheduler {
         log.info("Рассылка недельного отчета завершена");
     }
 
-    @Scheduled(cron = "0 0 22 * * *", zone = "Europe/Moscow")
+    @Transactional
+    @Scheduled(initialDelay = 1000)
     public void completingReportsNotifier() {
         log.info("Запуск рассылки напоминаний о заполнении отчетов");
         var currentWeekDay = new GregorianCalendar(LOCALE).getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, LOCALE);
@@ -145,27 +151,35 @@ public class GroupsReportsScheduler {
         for (var leaderEntity : leaders) {
             var now = LocalDate.now();
             var nowAsString = DATE_FORMATTER.format(now);
-            var leaderName = leaderEntity.getUser().getLastName() + " " + leaderEntity.getUser().getFirstName();
+            var leaderName = leaderEntity.getUser().getFullName();
             var telegramId = leaderEntity.getUser().getTelegramId();
             var groups = leaderEntity.getGroups();
             for (var group : groups) {
-                var shortUrl = getShortUrl(leaderName, nowAsString, group.getId());
-                var message = String.format(REPORT_MESSAGE, nowAsString, shortUrl);
-                log.info("Отправка напоминания лидеру: {}", leaderName);
-                notificationService.sendNotification(String.valueOf(telegramId), message);
-                var unfilledReport = UnfilledReportEntity.builder()
-                        .reportDate(now)
-                        .leaderId(leaderEntity.getId())
-                        .leaderName(leaderName)
-                        .leaderTelegramId(String.valueOf(telegramId))
-                        .group(group)
-                        .build();
-                unfilledReportRepository.save(unfilledReport);
+                var groupDay = group.getGroupsDays()
+                        .stream()
+                        .findFirst()
+                        .map(GroupDayEntity::getDay)
+                        .map(DayEntity::getTitle);
+                if (groupDay.isPresent() && formattedDay.equals(groupDay.get())) {
+                    var shortUrl = getShortUrl(leaderName, nowAsString, group.getId());
+                    var message = String.format(REPORT_MESSAGE, nowAsString, shortUrl);
+                    log.info("Отправка напоминания лидеру: {}", leaderName);
+                    notificationService.sendNotification(String.valueOf(telegramId), message);
+                    var unfilledReport = UnfilledReportEntity.builder()
+                            .reportDate(now)
+                            .leaderId(leaderEntity.getId())
+                            .leaderName(leaderName)
+                            .leaderTelegramId(String.valueOf(telegramId))
+                            .group(group)
+                            .build();
+                    unfilledReportRepository.save(unfilledReport);
+                }
             }
         }
         log.info("Запуск рассылки напоминаний о заполнении отчетов завершен");
     }
 
+    @Transactional
     @Scheduled(cron = "0 0 21 * * *", zone = "Europe/Moscow")
     public void unfilledReportsReportsNotifier() {
         log.info("Запуск рассылки повторных напоминаний о заполнении отчетов");
@@ -247,10 +261,10 @@ public class GroupsReportsScheduler {
                                     List<NotCompletedGroup> notCompletedGroups) {
         var title = String.format("Отчет по домашним группам за %s\n\n", getMonthName(LocalDate.now().getMonthValue() - 1, notCompletedGroups));
         return title +
-               String.format("Открыто групп: %s\n", openedGroups) +
-               String.format("Прошло групп: %s\n", completedGroupsByMonth) +
-               String.format("Не прошло групп: %s\n\n", notCompleted) +
-               notCompletedGroupsReportText(notCompletedGroups);
+                String.format("Открыто групп: %s\n", openedGroups) +
+                String.format("Прошло групп: %s\n", completedGroupsByMonth) +
+                String.format("Не прошло групп: %s\n\n", notCompleted) +
+                notCompletedGroupsReportText(notCompletedGroups);
     }
 
     private String getMonthName(int number, List<NotCompletedGroup> notCompletedGroups) {
