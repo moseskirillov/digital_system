@@ -139,7 +139,7 @@ public class GroupsReportsScheduler {
     }
 
     @Transactional
-    @Scheduled(initialDelay = 1000)
+    @Scheduled(cron = "0 0 22 * * *", zone = "Europe/Moscow")
     public void completingReportsNotifier() {
         log.info("Запуск рассылки напоминаний о заполнении отчетов");
         var currentWeekDay = new GregorianCalendar(LOCALE).getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, LOCALE);
