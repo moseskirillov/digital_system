@@ -8,5 +8,6 @@ public record ReportRequest(
         Integer peopleCount,
         String evidence,
         String meetWithSenior,
-        String date
+        String date,
+        String wishes
 ) {}

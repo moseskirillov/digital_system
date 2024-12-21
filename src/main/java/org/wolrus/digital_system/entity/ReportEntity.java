@@ -61,6 +61,9 @@ public class ReportEntity {
     @Column(name = "people_count")
     private Integer peopleCount;
 
+    @Column(name = "wishes", length = 3000)
+    private String wishes;
+
     public static ReportEntity of(ReportRequest report, LocalDate date, GroupEntity group) {
         return ReportEntity.builder()
                 .date(date)
@@ -70,6 +73,7 @@ public class ReportEntity {
                 .evidence(StringUtils.hasLength(report.evidence()) ? report.evidence() : EPMTY_STRING)
                 .meetWithSenior(YES.equals(report.meetWithSenior()))
                 .group(group)
+                .wishes(report.wishes())
                 .build();
     }
 
