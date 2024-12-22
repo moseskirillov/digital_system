@@ -34,3 +34,5 @@ build/
 
 docker-compose.yml
 /.mvn/
+/amplicode.xml
+/webapp/

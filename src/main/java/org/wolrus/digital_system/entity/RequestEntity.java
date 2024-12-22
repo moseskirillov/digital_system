@@ -37,4 +37,7 @@ public class RequestEntity {
     @Column(name = "process_date")
     private Instant processDate;
 
+    @Column(name = "feedback_requested")
+    private Boolean feedbackRequested;
+
 }
