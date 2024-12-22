@@ -1,7 +1,7 @@
 package org.wolrus.digital_system.scheduler;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.wolrus.digital_system.feign.TelegramReportClient;
@@ -12,7 +12,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RequestCheckScheduler {
@@ -23,7 +22,8 @@ public class RequestCheckScheduler {
     private final RequestRepository requestRepository;
     private final TelegramReportClient telegramReportClient;
 
-    @Scheduled(initialDelay = 1000)
+    @Transactional
+    @Scheduled(cron = "0 0 20 * * ?", zone = "Europe/Moscow")
     public void requestCheck() {
         var now = ZonedDateTime.now().minusDays(1L);
         var startOfDay = now.truncatedTo(ChronoUnit.DAYS);
