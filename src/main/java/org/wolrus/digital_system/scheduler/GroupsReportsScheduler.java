@@ -240,7 +240,8 @@ public class GroupsReportsScheduler {
         for (var unfilledReport : unfilledReportEntities) {
             var groupLeaderEntity = groupLeaderRepository.findById(unfilledReport.getLeaderId());
             var leaderName = groupLeaderEntity.map(GroupLeaderEntity::getUser)
-                    .map(e -> e.getLastName() + " " + e.getFirstName());
+                    .map(e -> e.getLastName() + " " + e.getFirstName())
+                    .orElse("Имя не определено");
             var regionalLeaderModel = groupLeaderEntity.map(GroupLeaderEntity::getRegionalLeader)
                     .map(RegionalLeaderEntity::getUser)
                     .map(LeaderInfo::of)
